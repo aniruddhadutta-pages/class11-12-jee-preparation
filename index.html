@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission 2028 — JEE / MHT-CET / HSC Control Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0F1C; --panel:#111A2E; --panel-alt:#17223B; --border:#26314C; --border-soft:#1D2A45;
+    --gold:#F2A93B; --gold-dim:#7A5A24; --teal:#45D6C4; --teal-dim:#1F5C54;
+    --coral:#FF7A6B; --violet:#B49CE8; --blue:#7FB0E8;
+    --text:#EDEFF6; --text-dim:#8C99BA; --text-faint:#5B6685;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:var(--teal);}
+
+  .shell{max-width:1180px;margin:0 auto;padding:28px 24px 80px;}
+  .topbar{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:24px;}
+  .brand-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;margin:0 0 6px;}
+  .brand-title{font-size:30px;font-weight:600;margin:0;line-height:1.1;}
+  .brand-sub{color:var(--text-dim);font-size:13.5px;margin-top:6px;max-width:560px;}
+  .today-chip{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 16px;text-align:right;}
+  .today-chip .label{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.08em;}
+  .today-chip .val{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--teal);margin-top:2px;}
+
+  .nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:28px;border-bottom:1px solid var(--border);}
+  .nav button{background:none;border:none;color:var(--text-dim);font-family:'Inter',sans-serif;font-size:13.5px;font-weight:500;padding:11px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:color .15s, border-color .15s;white-space:nowrap;}
+  .nav button:hover{color:var(--text);}
+  .nav button.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+  .panel{display:none;}
+  .panel.active{display:block;animation:fadein .25s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  .grid{display:grid;gap:16px;}
+  .grid-4{grid-template-columns:repeat(4,1fr);}
+  @media(max-width:900px){.grid-4{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:560px){.grid-4{grid-template-columns:1fr;}}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+  .section-title{font-size:20px;font-weight:600;margin:0 0 4px;}
+  .section-note{color:var(--text-dim);font-size:13px;margin:0 0 18px;max-width:700px;line-height:1.55;}
+
+  .countdown-card .name{font-size:13px;color:var(--text-dim);margin-bottom:10px;}
+  .countdown-card .days{font-family:'IBM Plex Mono',monospace;font-size:38px;font-weight:600;color:var(--gold);line-height:1;}
+  .countdown-card .days span{font-size:13px;color:var(--text-faint);font-weight:400;margin-left:6px;}
+  .countdown-card .date-row{margin-top:12px;display:flex;align-items:center;gap:8px;}
+  .countdown-card input[type=date]{background:var(--panel-alt);border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:4px 6px;font-family:'IBM Plex Mono',monospace;font-size:11px;}
+  .tentative-tag{font-size:10px;color:var(--gold);background:rgba(242,169,59,.12);border:1px solid var(--gold-dim);padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.06em;}
+
+  .flightpath{position:relative;height:110px;margin:30px 0 10px;}
+  .flightpath .track{position:absolute;top:50px;left:0;right:0;height:2px;background:var(--border);}
+  .flightpath .fill{position:absolute;top:50px;left:0;height:2px;background:var(--gold);}
+  .flightpath .node{position:absolute;top:44px;width:14px;height:14px;border-radius:50%;background:var(--panel);border:2px solid var(--text-faint);transform:translateX(-50%);}
+  .flightpath .node.passed{border-color:var(--gold);background:var(--gold);}
+  .flightpath .node.here{border-color:var(--teal);background:var(--teal);box-shadow:0 0 0 5px rgba(69,214,196,.18);animation:pulse 2.2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 5px rgba(69,214,196,.18);}50%{box-shadow:0 0 0 9px rgba(69,214,196,.28);}}
+  .flightpath .lbl{position:absolute;top:66px;transform:translateX(-50%);font-size:11px;color:var(--text-dim);width:110px;text-align:center;line-height:1.35;}
+  .flightpath .lbl b{display:block;color:var(--text);font-size:11.5px;font-weight:600;}
+
+  .phase-list{display:flex;flex-direction:column;gap:10px;margin-top:36px;}
+  .phase-row{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:14px 16px;background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:10px;align-items:start;}
+  .phase-row .when{font-family:'IBM Plex Mono',monospace;color:var(--gold);font-size:12.5px;font-weight:600;}
+  .phase-row .what b{display:block;font-size:14px;margin-bottom:3px;}
+  .phase-row .what span{color:var(--text-dim);font-size:12.5px;line-height:1.5;}
+  @media(max-width:640px){.phase-row{grid-template-columns:1fr;}}
+
+  .subject-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:6px;}
+  .progress-pill{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--text-dim);}
+  .progress-bar-outer{width:140px;height:6px;background:var(--panel-alt);border-radius:4px;overflow:hidden;}
+  .progress-bar-inner{height:100%;background:var(--teal);border-radius:4px;transition:width .3s;}
+
+  .chapter-list{display:flex;flex-direction:column;gap:8px;margin-top:18px;}
+  .chapter-item{background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:8px;overflow:hidden;}
+  .chapter-row{display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;}
+  .chapter-row input[type=checkbox]{width:17px;height:17px;accent-color:var(--teal);cursor:pointer;flex-shrink:0;}
+  .chapter-row .cname{flex:1;font-size:13.5px;}
+  .chapter-row.checked .cname{color:var(--text-faint);text-decoration:line-through;}
+  .chapter-row .chevron{color:var(--text-faint);font-size:11px;transition:transform .2s;flex-shrink:0;}
+  .chapter-row .chevron.open{transform:rotate(90deg);}
+  .tag{font-size:10px;padding:2px 7px;border-radius:20px;letter-spacing:.03em;border:1px solid var(--border);color:var(--text-dim);white-space:nowrap;}
+  .tag.adv{border-color:var(--coral);color:var(--coral);}
+  .tag.noJEE{border-color:var(--text-faint);color:var(--text-faint);}
+  .tag.hw{border-color:var(--violet);color:var(--violet);}
+
+  .chapter-detail{display:none;padding:4px 16px 16px 43px;border-top:1px solid var(--border-soft);}
+  .chapter-detail.open{display:block;animation:fadein .2s ease;}
+  .chapter-detail h4{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;font-weight:600;}
+  .chapter-detail ul{margin:0;padding-left:16px;}
+  .chapter-detail li{font-size:12.5px;color:var(--text-dim);line-height:1.7;}
+  .exam-note{font-size:12.5px;color:var(--text-dim);line-height:1.75;background:var(--bg);border:1px solid var(--border-soft);border-radius:8px;padding:10px 12px;margin-top:4px;}
+  .exam-note b{color:var(--text);}
+  .exam-chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 2px;}
+  .exam-chip{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--panel);border:1px solid var(--border);color:var(--text-dim);}
+
+  table.books{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px;}
+  table.books th{text-align:left;color:var(--text-faint);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;border-bottom:1px solid var(--border);}
+  table.books td{padding:10px;border-bottom:1px solid var(--border-soft);vertical-align:top;color:var(--text-dim);}
+  table.books td.subj{color:var(--text);font-weight:600;}
+
+  .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-top:18px;}
+  @media(max-width:900px){.week-grid{grid-template-columns:repeat(2,1fr);}}
+  .day-card{background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:10px;padding:12px;}
+  .day-card .dname{font-size:12px;font-weight:600;color:var(--gold);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;}
+  .day-card textarea{width:100%;min-height:100px;background:transparent;border:none;color:var(--text);font-family:'Inter',sans-serif;font-size:12.5px;resize:vertical;outline:none;line-height:1.5;}
+  .day-card textarea::placeholder{color:var(--text-faint);}
+
+  .subj-progress-row{display:flex;flex-direction:column;gap:14px;}
+  .sp-item{display:grid;grid-template-columns:140px 1fr 46px;align-items:center;gap:14px;}
+  .sp-item .lbl{font-size:13px;color:var(--text-dim);}
+  .sp-item .pct{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--teal);text-align:right;}
+  .bigbar-outer{height:9px;background:var(--panel-alt);border-radius:5px;overflow:hidden;}
+  .bigbar-inner{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width .4s;}
+
+  .reset-btn{background:none;border:1px solid var(--border);color:var(--text-faint);font-size:11.5px;padding:6px 12px;border-radius:7px;cursor:pointer;margin-top:20px;}
+  .reset-btn:hover{border-color:var(--coral);color:var(--coral);}
+  .expand-all-btn{background:none;border:1px solid var(--border);color:var(--text-dim);font-size:11.5px;padding:6px 12px;border-radius:7px;cursor:pointer;}
+  .expand-all-btn:hover{border-color:var(--teal);color:var(--teal);}
+
+  .save-toast{position:fixed;bottom:20px;right:20px;background:var(--panel);border:1px solid var(--teal-dim);color:var(--teal);font-size:12.5px;padding:9px 16px;border-radius:8px;opacity:0;transform:translateY(6px);transition:opacity .25s, transform .25s;pointer-events:none;}
+  .save-toast.show{opacity:1;transform:translateY(0);}
+
+  ::-webkit-scrollbar{height:6px;width:6px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <div class="topbar">
+    <div>
+      <p class="brand-eyebrow">Flight plan · destination 2028</p>
+      <h1 class="brand-title">Mission control — JEE · MHT-CET · HSC</h1>
+      <p class="brand-sub">Six subjects, one console. Click any chapter to expand its sub-topics and exam-by-exam notes (JEE Main, JEE Advanced, MHT-CET, BITSAT, WBJEE, Board).</p>
+    </div>
+    <div class="today-chip">
+      <div class="label">Today</div>
+      <div class="val mono" id="today-display">—</div>
+    </div>
+  </div>
+
+  <div class="nav" id="nav">
+    <button data-tab="overview" class="active">Overview</button>
+    <button data-tab="roadmap">Roadmap</button>
+    <button data-tab="physics">Physics</button>
+    <button data-tab="chemistry">Chemistry</button>
+    <button data-tab="maths">Maths</button>
+    <button data-tab="psychology">Psychology</button>
+    <button data-tab="other">English &amp; IT</button>
+    <button data-tab="books">Books</button>
+    <button data-tab="studymethod">Study method</button>
+    <button data-tab="planner">Weekly planner</button>
+    <button data-tab="progress">Progress</button>
+  </div>
+
+  <!-- ============ OVERVIEW ============ -->
+  <div class="panel active" id="panel-overview">
+    <h2 class="section-title">Countdown to launch windows</h2>
+    <p class="section-note">Dates below are tentative placeholders based on historical patterns. Update each one the moment the official date is announced.</p>
+    <div class="grid grid-4" id="countdown-grid"></div>
+    <div class="card" style="margin-top:24px;">
+      <h3 style="margin:0 0 10px;font-size:15px;">How to read the exam tags</h3>
+      <p style="color:var(--text-dim);font-size:13px;line-height:1.75;margin:0;">
+        Every Physics, Chemistry, and Maths chapter now expands to show its sub-topics plus a note on how <b>JEE Main</b>, <b>JEE Advanced</b>,
+        <b>MHT-CET</b>, <b>BITSAT</b>, and <b>WBJEE</b> each treat that chapter differently — same core content, different depth and question style.
+        Other entrance exams (VITEEE, SRMJEEE, COMEDK, KCET) broadly mirror JEE Main's NCERT-based difficulty, so they're not broken out separately
+        unless a chapter is a genuine outlier. Psychology, English, and IT are Board-only — no entrance exam tests them — so their detail covers
+        Board depth alone.
+      </p>
+    </div>
+  </div>
+
+  <!-- ============ ROADMAP ============ -->
+  <div class="panel" id="panel-roadmap">
+    <h2 class="section-title">The route from here to the exams</h2>
+    <p class="section-note">Spans July 2026 to June 2028. The teal marker shows roughly where you are today; gold shows distance already covered.</p>
+    <div class="flightpath" id="flightpath"></div>
+    <div class="phase-list">
+      <div class="phase-row"><div class="when">Jun 2026 – Mar 2027</div><div class="what"><b>Phase 1 — Foundation (Class 11)</b><span>Build every Class 11 chapter across all six subjects. Physics/Chem/Maths: Balbharati exercises → NCERT exercises → CET MCQs → light JEE problems. Psychology/English/IT: steady weekly progress.</span></div></div>
+      <div class="phase-row"><div class="when">Jun – Oct 2027</div><div class="what"><b>Phase 2 — Consolidation (Class 12 new content)</b><span>Cover all Class 12 chapters at full depth. PCM runs Board+CET+JEE+BITSAT+WBJEE layers together; Psychology/English/IT continue alongside.</span></div></div>
+      <div class="phase-row"><div class="when">Nov – Dec 2027</div><div class="what"><b>Phase 3 — Integration</b><span>First full-syllabus revision pass across all six subjects. Weekly full-length mocks, rotating exam patterns; Psychology case-study practice and English/IT past papers begin.</span></div></div>
+      <div class="phase-row"><div class="when">Jan 2028</div><div class="what"><b>JEE Main Session 1 + Board practicals</b><span>Tentative window — protect Physics/Chemistry/IT practical journals and Psychology internal assessment here.</span></div></div>
+      <div class="phase-row"><div class="when">Feb – Mar 2028</div><div class="what"><b>HSC Board theory exams — all six subjects</b><span>Your single biggest fixed-date commitment. Full focus here.</span></div></div>
+      <div class="phase-row"><div class="when">Apr 2028</div><div class="what"><b>MHT-CET Session 1 + JEE Main Session 2</b><span>Board discipline transfers directly into these PCM-only papers. BITSAT/WBJEE application windows typically open around this period too — check each exam's official site.</span></div></div>
+      <div class="phase-row"><div class="when">May – Jun 2028</div><div class="what"><b>MHT-CET Session 2 + JEE Advanced (+ BITSAT/WBJEE if applicable)</b><span>Dedicated deep-dive on JEE Advanced-only depth in the weeks between Main results and Advanced.</span></div></div>
+    </div>
+  </div>
+
+  <!-- ============ PHYSICS ============ -->
+  <div class="panel" id="panel-physics">
+    <div class="subject-head">
+      <div><h2 class="section-title" style="margin-bottom:2px;">Physics — Class 12 (Balbharati)</h2>
+      <p class="section-note" style="margin-bottom:0;">Click a chapter to expand sub-topics and exam-specific notes. <span class="tag adv" style="margin:0 2px;">Adv</span> = JEE Advanced goes noticeably deeper.</p></div>
+      <div class="progress-pill">Chapters done <div class="progress-bar-outer"><div class="progress-bar-inner" id="bar-physics" style="width:0%"></div></div><span id="pct-physics">0/16</span></div>
+    </div>
+    <div class="chapter-list" id="list-physics"></div>
+    <h3 style="font-size:13px;color:var(--text-dim);margin:26px 0 8px;text-transform:uppercase;letter-spacing:.05em;">Class 11 carry-forward (still tested by JEE/CET/BITSAT/WBJEE)</h3>
+    <div class="chapter-list" id="list-physics-c11"></div>
+  </div>
+
+  <!-- ============ CHEMISTRY ============ -->
+  <div class="panel" id="panel-chemistry">
+    <div class="subject-head">
+      <div><h2 class="section-title" style="margin-bottom:2px;">Chemistry — Class 12 (Balbharati)</h2>
+      <p class="section-note" style="margin-bottom:0;">Click a chapter to expand sub-topics and exam-specific notes.</p></div>
+      <div class="progress-pill">Chapters done <div class="progress-bar-outer"><div class="progress-bar-inner" id="bar-chemistry" style="width:0%"></div></div><span id="pct-chemistry">0/16</span></div>
+    </div>
+    <div class="chapter-list" id="list-chemistry"></div>
+    <h3 style="font-size:13px;color:var(--text-dim);margin:26px 0 8px;text-transform:uppercase;letter-spacing:.05em;">Class 11 carry-forward (still tested by JEE/CET/BITSAT/WBJEE)</h3>
+    <div class="chapter-list" id="list-chemistry-c11"></div>
+  </div>
+
+  <!-- ============ MATHS ============ -->
+  <div class="panel" id="panel-maths">
+    <div class="subject-head">
+      <div><h2 class="section-title" style="margin-bottom:2px;">Mathematics &amp; Statistics — Part I &amp; II</h2>
+      <p class="section-note" style="margin-bottom:0;"><span class="tag noJEE" style="margin:0 2px;">Board/CET only</span> = not tested in JEE Main/Advanced or BITSAT.</p></div>
+      <div class="progress-pill">Chapters done <div class="progress-bar-outer"><div class="progress-bar-inner" id="bar-maths" style="width:0%"></div></div><span id="pct-maths">0/15</span></div>
+    </div>
+    <div class="chapter-list" id="list-maths"></div>
+    <h3 style="font-size:13px;color:var(--text-dim);margin:26px 0 8px;text-transform:uppercase;letter-spacing:.05em;">Class 11 carry-forward (still tested by JEE/CET/BITSAT/WBJEE)</h3>
+    <div class="chapter-list" id="list-maths-c11"></div>
+  </div>
+
+  <!-- ============ PSYCHOLOGY ============ -->
+  <div class="panel" id="panel-psychology">
+    <div class="subject-head">
+      <div><h2 class="section-title" style="margin-bottom:2px;">Psychology — Class 12 (Balbharati)</h2>
+      <p class="section-note" style="margin-bottom:0;">Board-only (100 marks: 80 theory + 20 internal). No entrance exam tests this subject. <span class="tag hw" style="margin:0 2px;">High-weight</span> = highest-marks chapters.</p></div>
+      <div class="progress-pill">Chapters done <div class="progress-bar-outer"><div class="progress-bar-inner" id="bar-psychology" style="width:0%"></div></div><span id="pct-psychology">0/8</span></div>
+    </div>
+    <div class="chapter-list" id="list-psychology"></div>
+  </div>
+
+  <!-- ============ ENGLISH & IT ============ -->
+  <div class="panel" id="panel-other">
+    <div class="subject-head">
+      <div><h2 class="section-title" style="margin-bottom:2px;">English &amp; Information Technology</h2>
+      <p class="section-note" style="margin-bottom:0;">Board-only — no entrance exam relevance. Keep both ticking over lightly and regularly.</p></div>
+      <div class="progress-pill">Sections done <div class="progress-bar-outer"><div class="progress-bar-inner" id="bar-other" style="width:0%"></div></div><span id="pct-other">0/10</span></div>
+    </div>
+    <h3 style="font-size:13px;color:var(--text-dim);margin:20px 0 8px;text-transform:uppercase;letter-spacing:.05em;">English — Yuvakbharati</h3>
+    <div class="chapter-list" id="list-english"></div>
+    <h3 style="font-size:13px;color:var(--text-dim);margin:26px 0 8px;text-transform:uppercase;letter-spacing:.05em;">Information Technology</h3>
+    <div class="chapter-list" id="list-it"></div>
+  </div>
+
+  <!-- ============ BOOKS ============ -->
+  <div class="panel" id="panel-books">
+    <h2 class="section-title">One shelf, every exam</h2>
+    <p class="section-note">Core books build the Board-aligned foundation; CET/JEE/BITSAT/WBJEE columns layer speed and depth on the same PCM chapters. Psychology, English, and IT are Board-only.</p>
+    <table class="books">
+      <tr><th>Subject</th><th>Core (Board + concept)</th><th>CET-specific</th><th>JEE-specific</th><th>BITSAT / WBJEE</th></tr>
+      <tr><td class="subj">Physics</td><td>Balbharati Physics, NCERT Physics I &amp; II</td><td>Target/MTG MHT-CET Triumph Physics</td><td>HC Verma I &amp; II, DC Pandey, Irodov (Adv 200+)</td><td>BITSAT previous-year papers (Arihant), WBJEE previous-year papers</td></tr>
+      <tr><td class="subj">Chemistry</td><td>Balbharati Chemistry, NCERT Chemistry I &amp; II</td><td>Target/MTG MHT-CET Triumph Chemistry</td><td>O.P. Tandon, M.S. Chouhan (Organic, Adv)</td><td>BITSAT/WBJEE previous-year papers</td></tr>
+      <tr><td class="subj">Maths</td><td>Balbharati Maths Part I &amp; II, NCERT Maths</td><td>Target/MTG MHT-CET Triumph Maths</td><td>Cengage/Arihant, 10-yr JEE PYQ book</td><td>BITSAT/WBJEE previous-year papers</td></tr>
+      <tr><td class="subj">Psychology</td><td>Balbharati Psychology, Target guide, Chetana/Vidyarthi Mitra notes</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="subj">English</td><td>Yuvakbharati, Target/Navneet guide</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="subj">IT</td><td>Balbharati IT, Target IT guide</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="subj">Mock tests</td><td>—</td><td>cetcell.mahacet.org</td><td>jeemain.nta.nic.in</td><td>BITSAT: bitsadmission.com · WBJEE: wbjeeb.nic.in</td></tr>
+    </table>
+    <p style="color:var(--text-faint);font-size:12px;margin-top:16px;line-height:1.6;">One habit that pays off everywhere: keep a running error-log per subject — mistakes from every test/mock, with the correct method written out. Review it weekly.</p>
+  </div>
+
+  <!-- ============ STUDY METHOD ============ -->
+  <div class="panel" id="panel-studymethod">
+    <h2 class="section-title">How to approach any chapter</h2>
+    <p class="section-note">A repeatable sequence that works whether it's Physics, Chemistry, Maths, Psychology, English, or IT — only the depth of steps 4-5 changes by subject.</p>
+    <div class="card">
+      <ol style="margin:0;padding-left:20px;color:var(--text-dim);font-size:13px;line-height:2;">
+        <li><b style="color:var(--text);">Concept pass, untimed.</b> Read the chapter once in Balbharati (or Yuvakbharati/IT textbook) without solving anything — just follow the logic of each idea or derivation.</li>
+        <li><b style="color:var(--text);">Active recall.</b> Close the book. From memory, write down every sub-topic and formula, plus the one-line logic behind each. This is where real learning happens, not in re-reading.</li>
+        <li><b style="color:var(--text);">Textbook exercises first.</b> Solve every exercise problem in the prescribed textbook before touching any outside source — this is what Board and internal exams draw from directly.</li>
+        <li><b style="color:var(--text);">Layer in depth where it's flagged.</b> For PCM chapters tagged <span class="tag adv">Adv</span> in the Physics/Chemistry/Maths tabs, add reference-book problems (see the exam notes inside each chapter for exactly what to focus on). Skip this step for chapters without the tag — that time is better spent elsewhere.</li>
+        <li><b style="color:var(--text);">Timed practice.</b> CET-style MCQs untimed first, then timed. Add a JEE-level mixed set only after CET-level accuracy is consistently high.</li>
+        <li><b style="color:var(--text);">Error log + spaced revision.</b> Log every mistake with the correct method, not just the right answer. Revisit the chapter briefly after 3 days, then again after 2 weeks — this single habit does more for retention than repeated full re-reads.</li>
+      </ol>
+    </div>
+
+    <h2 class="section-title" style="margin-top:28px;">Widely-cited strategies from past JEE/CET aspirants</h2>
+    <p class="section-note">General, commonly repeated habits — not tied to any one person — that show up again and again in how successful aspirants describe their prep.</p>
+    <div class="card">
+      <ul style="margin:0;padding-left:20px;color:var(--text-dim);font-size:13px;line-height:2;">
+        <li>Solve previous years' papers <b style="color:var(--text);">chapter-wise</b>, not only as full mocks — it isolates your weak chapters far faster than a full paper does.</li>
+        <li>Keep one small formula notebook per subject (not a full notes rewrite) and review it every Sunday, not just before exams.</li>
+        <li>After every mock, spend at least as long analysing mistakes as you spent taking the test. The score matters less than what the errors reveal.</li>
+        <li>Depth in one source beats breadth across five — chasing a "better" book mid-syllabus usually costs more time than it saves.</li>
+        <li>For Organic Chemistry specifically: redraw reaction mechanisms by hand instead of only reading them. The recall under exam pressure comes from muscle memory, not familiarity.</li>
+        <li>Protect sleep and a steady revision pace in the final month before Boards/CET/JEE — consistent schedules are mentioned far more often than last-minute all-nighters.</li>
+        <li>Teach a concept out loud to someone (or even to yourself) after finishing a chapter — if you can't explain it simply, that's exactly where the gap is.</li>
+      </ul>
+    </div>
+
+    <h2 class="section-title" style="margin-top:28px;">Lesson plan builder</h2>
+    <p class="section-note">Pick a subject and chapter to generate a ready-to-use lesson plan, tailored to that chapter's exam weight. Edit the result freely — it saves automatically.</p>
+    <div class="card">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <select id="lp-subject" style="background:var(--panel-alt);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 10px;font-size:13px;"></select>
+        <select id="lp-chapter" style="background:var(--panel-alt);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 10px;font-size:13px;flex:1;min-width:200px;"></select>
+        <button id="lp-generate" style="background:var(--gold);border:none;color:#1B1204;font-weight:600;border-radius:7px;padding:8px 16px;font-size:13px;cursor:pointer;">Generate plan</button>
+      </div>
+      <textarea id="lp-output" placeholder="Your generated lesson plan will appear here — fully editable." style="width:100%;min-height:220px;background:var(--panel-alt);border:1px solid var(--border-soft);border-radius:8px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.7;padding:14px;resize:vertical;outline:none;"></textarea>
+    </div>
+  </div>
+
+  <!-- ============ PLANNER ============ -->
+  <div class="panel" id="panel-planner">
+    <h2 class="section-title">Weekly planner</h2>
+    <p class="section-note">A living template — type directly into each day. Saved automatically.</p>
+    <div class="week-grid" id="week-grid"></div>
+  </div>
+
+  <!-- ============ PROGRESS ============ -->
+  <div class="panel" id="panel-progress">
+    <h2 class="section-title">Overall progress</h2>
+    <p class="section-note">Pulled live from the checkboxes across all six subject tabs.</p>
+    <div class="card"><div class="subj-progress-row" id="progress-rows"></div></div>
+    <button class="reset-btn" id="reset-btn">Reset all checklists</button>
+  </div>
+
+</div>
+
+<div class="save-toast" id="save-toast">Saved</div>
+
+<script>
+/* ================= DATA ================= */
+/* Each item: [name, flag, [subtopics...], examNoteHTML] */
+const PHYSICS = [
+["Rotational Dynamics","adv",
+ ["Moment of inertia — parallel &amp; perpendicular axis theorems","Torque and angular momentum","Rolling motion without slipping","Rotational kinetic energy","Conservation of angular momentum"],
+ "<b>JEE Advanced:</b> combines rolling + energy conservation + friction in multi-body systems — high weight, frequently appears. <b>JEE Main:</b> moment-of-inertia formulas and simpler rolling numericals. <b>BITSAT/WBJEE:</b> direct torque/angular-momentum numericals, less multi-concept. <b>MHT-CET/Board:</b> standard formulas and derivations (radius of gyration, MI of common bodies)."],
+["Mechanical Properties of Fluids","",
+ ["Pressure &amp; Pascal's law","Buoyancy &amp; Archimedes' principle","Surface tension &amp; capillarity","Viscosity &amp; Stokes' law","Bernoulli's theorem &amp; Venturimeter"],
+ "<b>JEE:</b> Bernoulli's + continuity equation combined problems, terminal velocity via Stokes' law. <b>BITSAT:</b> straightforward Bernoulli/pressure numericals. <b>WBJEE/MHT-CET:</b> surface tension/capillary-rise formula questions. <b>Board:</b> definitions and derivations of Bernoulli's theorem and Stokes' law."],
+["Kinetic Theory of Gases and Radiation","",
+ ["Postulates of kinetic theory","Pressure from kinetic theory","Degrees of freedom &amp; specific heats","Maxwell-Boltzmann distribution (qualitative)","Stefan-Boltzmann &amp; Wien's law"],
+ "<b>JEE:</b> rms/average/most-probable speed numericals, degrees-of-freedom based Cv/Cp problems. <b>BITSAT/WBJEE:</b> direct substitution numericals. <b>Board:</b> definitions, graphs, and law statements more than derivation depth."],
+["Thermodynamics","",
+ ["First law of thermodynamics","Isothermal/adiabatic/isochoric/isobaric processes","Work done in each process","Second law &amp; Carnot engine","Entropy (qualitative)"],
+ "<b>JEE Advanced:</b> P-V diagram multi-process cyclic problems, efficiency calculations. <b>JEE Main/BITSAT:</b> single-process work/heat numericals. <b>Board/MHT-CET:</b> law statements, Carnot engine derivation."],
+["Oscillations","adv",
+ ["SHM equations &amp; graphs","Energy in SHM","Spring-mass &amp; simple pendulum","Damped/forced oscillations &amp; resonance (qualitative)","Combination of springs"],
+ "<b>JEE Advanced:</b> SHM combined with other topics (floating body SHM, two-body systems), phase-difference problems. <b>JEE Main/BITSAT:</b> standard time-period formulas. <b>Board:</b> derivations of time period for pendulum/spring."],
+["Superposition of Waves","",
+ ["Principle of superposition","Standing waves in strings/pipes","Beats","Doppler effect"],
+ "<b>JEE:</b> Doppler effect with moving source+observer combined, standing-wave harmonics. <b>BITSAT/WBJEE:</b> direct beats/Doppler numericals. <b>Board:</b> harmonic formulas for strings and open/closed pipes."],
+["Wave Optics","adv",
+ ["Huygens' principle","Interference — YDSE","Diffraction (single slit)","Polarization"],
+ "<b>JEE Advanced:</b> YDSE with modifications (glass slab, oil film, white-light fringes) — high weight. <b>JEE Main:</b> standard fringe-width numericals. <b>BITSAT/WBJEE:</b> basic YDSE/diffraction. <b>Board:</b> derivation of fringe width, interference conditions."],
+["Electrostatics","adv",
+ ["Coulomb's law","Electric field &amp; potential","Gauss's law &amp; applications","Capacitors — combinations, dielectrics, energy","Electric dipoles"],
+ "<b>JEE Advanced:</b> Gauss's law with irregular charge distributions, dynamic dielectric-insertion capacitor problems — very high weight. <b>JEE Main:</b> standard capacitor-combination and field/potential numericals. <b>BITSAT/WBJEE:</b> direct field/potential/capacitance formulas. <b>Board:</b> Gauss's law and capacitor derivations."],
+["Current Electricity","",
+ ["Ohm's law &amp; resistivity","Kirchhoff's laws","Wheatstone bridge","Potentiometer","RC circuits"],
+ "<b>JEE:</b> Kirchhoff's-law network problems, potentiometer numericals. <b>BITSAT/WBJEE:</b> direct circuit numericals. <b>Board:</b> meter-bridge/potentiometer experiment-based questions."],
+["Magnetic Fields due to Electric Current","",
+ ["Biot-Savart law","Ampere's law","Force on current-carrying conductor","Torque on current loop","Moving-coil galvanometer"],
+ "<b>JEE:</b> combined force+field problems with multiple wires. <b>BITSAT/WBJEE:</b> direct Biot-Savart numericals. <b>Board:</b> derivations for field due to straight wire/loop/solenoid."],
+["Magnetic Materials","",
+ ["Magnetic dipole moment","Dia/para/ferromagnetism","Hysteresis","Curie's law"],
+ "Lower weight everywhere. <b>All exams including Board:</b> mostly conceptual/definition-based, rarely more than one question."],
+["Electromagnetic Induction","adv",
+ ["Faraday's &amp; Lenz's law","Motional EMF","Self &amp; mutual inductance","Eddy currents"],
+ "<b>JEE Advanced:</b> EMI combined with mechanics (rod sliding on rails with dynamics) — high weight. <b>BITSAT/WBJEE:</b> direct EMF/inductance numericals. <b>Board:</b> derivations of self/mutual inductance."],
+["AC Circuits","adv",
+ ["AC through R/L/C","Phasor diagrams","Impedance","Resonance in LCR circuits","Power in AC circuits","Transformers"],
+ "<b>JEE Advanced:</b> LCR resonance + phase-angle multi-step problems. <b>JEE Main/BITSAT:</b> standard impedance/power numericals. <b>Board:</b> transformer working and derivations."],
+["Dual Nature of Radiation and Matter","",
+ ["Photoelectric effect — Einstein's equation","Work function &amp; stopping potential","de Broglie wavelength","Davisson-Germer experiment"],
+ "High weight across every exam. Mostly direct formula application, occasionally combined with stopping-potential-vs-frequency graphs. Near-identical treatment in JEE, BITSAT, WBJEE, and Board."],
+["Structure of Atoms and Nuclei","",
+ ["Bohr model &amp; atomic spectra","Radioactivity &amp; decay laws","Binding energy","Nuclear fission &amp; fusion"],
+ "<b>JEE:</b> Bohr-model numericals + radioactive decay-chain problems. <b>BITSAT/WBJEE:</b> direct half-life/binding-energy numericals. <b>Board:</b> derivations of Bohr's postulates, mass-defect calculations."],
+["Semiconductor Devices","",
+ ["p-n junction diode","Rectifiers","Zener diode","Basic transistor action","Logic gates"],
+ "<b>JEE Main/BITSAT/WBJEE:</b> diode characteristics + rectifier-circuit numericals. <b>Board:</b> logic-gate truth tables, transistor basics — practical-oriented."]
+];
+
+const CHEMISTRY = [
+["Solid State","",
+ ["Crystal lattices &amp; unit cells","Packing efficiency","Point defects","Electrical &amp; magnetic properties"],
+ "<b>JEE:</b> packing-efficiency + density numericals — high weight, calculation-heavy. <b>BITSAT/WBJEE:</b> direct unit-cell numericals. <b>Board:</b> types of unit cells, defect definitions."],
+["Solutions","",
+ ["Concentration terms","Raoult's law","Colligative properties","van't Hoff factor","Abnormal molar mass"],
+ "<b>JEE:</b> colligative properties combined with van't Hoff factor for electrolytes — high weight. <b>BITSAT/WBJEE:</b> direct numericals. <b>Board:</b> derivations and definitions."],
+["Ionic Equilibria","adv",
+ ["Acid-base equilibria","pH/pOH calculations","Buffer solutions","Solubility product &amp; common ion effect","Salt hydrolysis"],
+ "<b>JEE Advanced:</b> multi-step buffer/solubility problems — very high weight, calculation-heavy. <b>JEE Main/BITSAT/WBJEE:</b> standard pH/Ksp numericals. <b>Board:</b> theory + simple pH calculations."],
+["Chemical Thermodynamics","",
+ ["First law &amp; enthalpy","Hess's law","Entropy","Gibbs free energy &amp; spontaneity"],
+ "<b>JEE:</b> Gibbs-energy + entropy combined numericals. <b>BITSAT/WBJEE:</b> Hess's law direct numericals. <b>Board:</b> derivations, definitions, sign conventions."],
+["Electrochemistry","adv",
+ ["Electrochemical cells","Nernst equation","Conductance — molar/specific, Kohlrausch's law","Electrolysis &amp; Faraday's laws","Batteries &amp; fuel cells"],
+ "<b>JEE Advanced:</b> Nernst equation multi-step + conductance numericals — high weight. <b>BITSAT/WBJEE:</b> direct EMF/Faraday's-law numericals. <b>Board:</b> cell diagrams, definitions."],
+["Chemical Kinetics","adv",
+ ["Rate law, order &amp; molecularity","Integrated rate equations","Half-life","Arrhenius equation &amp; activation energy","Collision theory"],
+ "<b>JEE Advanced:</b> graphical/multi-step rate-law problems — high weight. <b>JEE Main/BITSAT/WBJEE:</b> direct order/half-life numericals. <b>Board:</b> definitions, rate-law derivations."],
+["Elements of Groups 16, 17, 18","",
+ ["Oxygen family compounds (O2, O3, SO2, H2SO4)","Halogens — properties, interhalogens, oxoacids","Noble gases — compounds &amp; uses"],
+ "Mostly factual/memory-based across all exams; JEE occasionally tests oxoacid structures. <b>Board:</b> preparation methods and properties."],
+["Transition and Inner Transition Elements","",
+ ["General trends — config, oxidation states, colour, magnetism","Lanthanoid contraction","Key compounds — KMnO4, K2Cr2O7"],
+ "<b>JEE:</b> trend-based reasoning + KMnO4/K2Cr2O7 reaction questions. <b>BITSAT/WBJEE/Board:</b> factual trends and preparation/properties."],
+["Coordination Compounds","adv",
+ ["Werner's theory","IUPAC nomenclature","Isomerism — structural &amp; stereo","VBT/CFT","Magnetic properties &amp; colour"],
+ "<b>JEE Advanced:</b> CFT-based magnetic/colour reasoning + isomerism identification — high weight, conceptual. <b>BITSAT/WBJEE:</b> nomenclature + basic isomerism. <b>Board:</b> Werner's theory, nomenclature rules."],
+["Halogen Derivatives of Alkanes and Arenes","",
+ ["Nomenclature","Preparation methods","SN1/SN2 mechanisms","Elimination reactions"],
+ "<b>JEE:</b> mechanism-based reasoning (SN1 vs SN2 conditions) — conceptual, high weight. <b>BITSAT/WBJEE:</b> direct reaction-based questions. <b>Board:</b> preparation reactions, properties."],
+["Alcohols, Phenols and Ethers","",
+ ["Nomenclature &amp; preparation","Acidity of phenols","Esterification &amp; dehydration","Williamson ether synthesis"],
+ "<b>JEE:</b> reaction-mechanism + acidity-comparison questions. <b>BITSAT/WBJEE:</b> direct reaction identification. <b>Board:</b> preparation/property reactions."],
+["Aldehydes, Ketones and Carboxylic Acids","adv",
+ ["Nomenclature &amp; preparation","Nucleophilic addition mechanism","Aldol condensation &amp; Cannizzaro reaction","Acidity of carboxylic acids"],
+ "<b>JEE Advanced:</b> multi-step organic synthesis/mechanism problems — very high weight. <b>BITSAT/WBJEE:</b> direct reaction/product identification. <b>Board:</b> preparation methods, Tollens'/Fehling's tests."],
+["Amines","",
+ ["Nomenclature &amp; preparation — Gabriel synthesis, Hofmann degradation","Basicity comparison","Diazonium salt reactions"],
+ "<b>JEE:</b> basicity ordering + diazonium coupling reactions. <b>BITSAT/WBJEE/Board:</b> preparation &amp; reaction-based."],
+["Biomolecules","",
+ ["Carbohydrates — classification &amp; structure","Proteins — amino acids, structure levels","Enzymes &amp; vitamins","Nucleic acids — DNA/RNA"],
+ "Mostly factual/memory across all exams; JEE occasionally tests structure-based reasoning. <b>Board:</b> definitions, structures, classifications."],
+["Introduction to Polymer Chemistry","",
+ ["Classification of polymers","Addition vs condensation polymerization","Important polymers — Nylon, Bakelite, rubber"],
+ "Factual across all exams. <b>Board:</b> preparation/uses of specific polymers."],
+["Green Chemistry and Nanochemistry","",
+ ["Principles of green chemistry","Nanomaterials basics &amp; applications"],
+ "Low JEE weight (rarely tested); mainly Board-relevant, occasional BITSAT/WBJEE factual question."]
+];
+
+const MATHS = [
+["Mathematical Logic","noJEE",
+ ["Statements &amp; truth tables","Logical connectives","Tautology/contradiction","Converse/inverse/contrapositive","Switching circuits"],
+ "<b>Not tested in JEE Main/Advanced or BITSAT.</b> <b>WBJEE:</b> rarely included. <b>MHT-CET/Board:</b> direct truth-table questions — essentially a Board/CET-only chapter for you."],
+["Matrices","",
+ ["Types of matrices &amp; operations","Determinants","Inverse via adjoint method","Solving linear equations — Cramer's rule, matrix method"],
+ "<b>JEE/BITSAT/WBJEE:</b> determinant properties + matrix-equation solving, moderate weight. <b>Board/CET:</b> direct computation-based."],
+["Trigonometric Functions","",
+ ["Compound angle formulas","Multiple/sub-multiple angles","General solutions of trig equations","Properties of triangles"],
+ "<b>JEE:</b> general-solution + trig-identity proof problems. <b>BITSAT/WBJEE:</b> direct identity numericals. <b>Board:</b> formula-based simplification."],
+["Pair of Straight Lines","",
+ ["Combined equation of two lines","Angle between pair of lines","Homogenization"],
+ "<b>JEE Main:</b> occasional direct numerical. <b>BITSAT/WBJEE:</b> standard formula application. <b>Board/CET:</b> derivation-based."],
+["Vectors","adv",
+ ["Dot &amp; cross product","Scalar triple product","Vector equations of lines","Applications to geometry"],
+ "<b>JEE Advanced:</b> combined with 3D geometry in multi-step problems. <b>BITSAT/WBJEE:</b> direct dot/cross-product numericals. <b>Board:</b> proofs using vectors."],
+["Line and Plane","adv",
+ ["Direction cosines/ratios","Equation of line &amp; plane","Angle between lines/planes","Shortest distance between skew lines"],
+ "<b>JEE Advanced:</b> multi-concept 3D problems combined with vectors — high weight. <b>BITSAT/WBJEE:</b> direct distance/angle numericals. <b>Board:</b> standard equation derivations."],
+["Linear Programming","noJEE",
+ ["Formulating an LPP","Graphical method","Feasible region","Optimal solution"],
+ "<b>Not tested in JEE Main/Advanced or BITSAT.</b> <b>WBJEE:</b> occasionally included. <b>MHT-CET/Board:</b> direct graphical solving — essentially Board/CET-only."],
+["Differentiation","",
+ ["Rules of differentiation","Chain rule","Implicit differentiation","Logarithmic &amp; parametric differentiation"],
+ "Fundamental everywhere — JEE tests it mainly as a building block for applications rather than standalone. <b>BITSAT/WBJEE/Board:</b> direct differentiation problems."],
+["Applications of Derivatives","",
+ ["Tangents &amp; normals","Increasing/decreasing functions","Maxima/minima","Rolle's &amp; Mean Value theorems"],
+ "<b>JEE:</b> optimization word problems, moderate-high weight. <b>BITSAT/WBJEE:</b> direct maxima/minima numericals. <b>Board:</b> tangent/normal equation problems."],
+["Indefinite Integration","adv",
+ ["Standard integrals","Substitution method","Integration by parts","Partial fractions"],
+ "<b>JEE Advanced:</b> complex substitution-based integrals — high weight, technique-heavy. <b>BITSAT/WBJEE:</b> standard formula-based integrals. <b>Board:</b> direct application of standard forms."],
+["Definite Integration","adv",
+ ["Properties of definite integrals","Evaluating using properties","Leibnitz rule (basic)"],
+ "<b>JEE Advanced:</b> property-based tricky definite-integral problems — very high weight. <b>BITSAT/WBJEE:</b> direct substitution-based. <b>Board:</b> standard property applications."],
+["Application of Definite Integrals","",
+ ["Area under a curve","Area between two curves"],
+ "<b>JEE:</b> area bounded by multiple functions. <b>BITSAT/WBJEE:</b> direct area numericals. <b>Board:</b> standard area calculation."],
+["Differential Equations","",
+ ["Order &amp; degree","Formation of a differential equation","Variable separable form","Homogeneous &amp; linear (first order) DEs"],
+ "<b>JEE:</b> variable-separable/linear DE combined with application word problems. <b>BITSAT/WBJEE:</b> direct solving. <b>Board:</b> standard solving methods."],
+["Probability Distributions","",
+ ["Random variables","Probability mass function","Expectation &amp; variance"],
+ "<b>JEE:</b> basic expectation/variance numericals. <b>BITSAT/WBJEE:</b> direct numericals. <b>Board:</b> standard definitions &amp; computations."],
+["Binomial Distribution","",
+ ["Bernoulli trials","Binomial probability formula","Mean &amp; variance of binomial distribution"],
+ "<b>JEE:</b> occasional direct numerical. <b>BITSAT/WBJEE/Board:</b> standard formula application."]
+];
+
+const PSYCHOLOGY = [
+["Psychology: A Scientific Discipline","",
+ ["Definition &amp; goals of psychology","Branches of psychology","Research methods — observation, experiment, case study"],
+ "Board-only — no entrance exam relevance. Foundational chapter; expect definition and short-answer questions."],
+["Intelligence","hw",
+ ["Theories — Spearman, Gardner's multiple intelligences, Sternberg's triarchic theory","IQ &amp; its measurement","Extremes of intelligence — giftedness, intellectual disability","Emotional intelligence"],
+ "Board-only, high-weight chapter (~17 marks with options). Expect theory comparison and application-based questions."],
+["Personality","hw",
+ ["Trait theories — Big Five","Psychoanalytic perspective (Freud)","Assessment techniques — projective &amp; self-report tests"],
+ "Board-only, high-weight chapter. Case-study and 'distinguish between' style questions are common here."],
+["Cognitive Processes","",
+ ["Attention","Perception","Memory — encoding, storage, retrieval","Thinking &amp; problem solving"],
+ "Board-only. Application-based scenario questions on memory and problem-solving are typical."],
+["Emotions","",
+ ["Theories of emotion — James-Lange, Cannon-Bard","Physiological basis of emotion","Emotional regulation"],
+ "Board-only. Moderate weight; theory-based short answers."],
+["Psychological Disorders","",
+ ["Classification basics (DSM/ICD)","Anxiety disorders","Mood disorders","Causes of psychological disorders"],
+ "Board-only. Expect classification and symptom-identification questions."],
+["First Aid in Mental Health","",
+ ["Crisis intervention basics","Basic counseling skills","When and how to refer"],
+ "Board-only, practical/applied chapter — often linked to the internal assessment component."],
+["Positive Psychology","hw",
+ ["Happiness &amp; well-being","Resilience","Character strengths &amp; virtues"],
+ "Board-only, high-weight chapter (~12 marks). Application and reflection-style questions are common."]
+];
+
+const ENGLISH = [
+["Prose","", ["Essays, extracts, and biographical/reflective pieces from Yuvakbharati"], "Board-only. Focus on theme, tone, and author's message for each piece."],
+["Poetry","", ["Poem appreciation","Summary","Rhyme scheme &amp; poetic devices"], "Board-only. Expect appreciation questions covering central idea, figures of speech, and rhyme scheme."],
+["Writing skills","", ["Note-making/summary writing","Formal letters","E-mail writing","Report writing","Speech/essay writing"], "Board-only. Practising each format 2-3 times before boards matters more than volume."],
+["Grammar &amp; vocabulary","", ["Tenses &amp; voice","Reported speech","Synonyms/antonyms","One-word substitution","Idioms"], "Board-only. Woven throughout the paper rather than a separate section — steady practice pays off."]
+];
+
+const IT = [
+["Advanced networking","", ["Network types &amp; topologies","OSI/TCP-IP basics"], "Board-only."],
+["Cyber law &amp; security","", ["IT Act basics","Cybercrime categories","Ethical hacking basics"], "Board-only."],
+["Database management","", ["RDBMS concepts","SQL queries"], "Board-only. Practical/viva component is significant here."],
+["Web technologies","", ["HTML5","CSS3","Basic JavaScript"], "Board-only. Practical file work matters as much as theory."],
+["Programming concepts","", ["Core syntax &amp; logic building"], "Board-only."],
+["Practical journal / project work","", ["Lab journal","Viva preparation","Project submission"], "Board-only — carries significant marks (commonly ~30). Don't leave this to term-end."]
+];
+
+const PHYSICS_C11 = [
+["Units &amp; Measurement","", ["SI units","Dimensional analysis","Errors in measurement, significant figures"], "<b>JEE:</b> occasional dimensional-analysis question. <b>BITSAT/WBJEE:</b> quick conceptual check. <b>Board:</b> significant-figure rules."],
+["Kinematics","", ["Motion in a straight line","Relative velocity","Projectile motion","Motion in a plane"], "<b>JEE:</b> frequently combines projectile + relative velocity — foundational for later mechanics chapters. <b>BITSAT/WBJEE:</b> direct numericals. <b>Board:</b> standard equations of motion."],
+["Laws of Motion","", ["Newton's three laws","Friction","Circular motion dynamics","Pulley systems"], "<b>JEE Adv:</b> multi-body pulley/friction problems — high weight. <b>JEE Main/BITSAT/WBJEE:</b> standard force-body-diagram numericals. <b>Board:</b> law statements, simple applications."],
+["Work, Energy and Power","", ["Work-energy theorem","Conservation of energy","Elastic &amp; inelastic collisions","Power"], "<b>JEE:</b> collision + energy conservation combined problems. <b>BITSAT/WBJEE:</b> direct numericals. <b>Board:</b> standard formula application."],
+["Gravitation","", ["Kepler's laws","Gravitational potential energy","Escape velocity","Satellite motion"], "<b>JEE:</b> satellite energy/orbital-velocity problems. <b>BITSAT/WBJEE:</b> direct numericals. <b>Board:</b> Kepler's law statements."],
+["Elasticity (basic)","", ["Stress-strain","Hooke's law","Elastic moduli"], "Low-moderate weight everywhere — direct formula application across JEE, BITSAT, WBJEE, Board."],
+["Thermal Properties of Matter","", ["Heat &amp; specific heat","Calorimetry","Thermal expansion"], "<b>JEE:</b> occasional calorimetry numericals feeding into Cl.12 Thermodynamics. <b>Board/CET:</b> standard calorimetry problems."],
+["Waves — basics","", ["Wave motion basics","Transverse &amp; longitudinal waves","Wave speed"], "Foundational for Class 12 Superposition of Waves — all exams build on this directly."]
+];
+
+const CHEMISTRY_C11 = [
+["Mole Concept &amp; Stoichiometry","", ["Mole concept","Empirical/molecular formula","Limiting reagent"], "<b>JEE:</b> frequent stoichiometry numericals. <b>BITSAT/WBJEE:</b> direct numericals. <b>Board:</b> standard mole calculations."],
+["Atomic Structure","", ["Quantum numbers","Electronic configuration","Bohr model","Quantum mechanical model (basic)"], "<b>JEE:</b> conceptual quantum-number and configuration questions. <b>BITSAT/WBJEE/Board:</b> direct definitions and configuration writing."],
+["Chemical Bonding","adv", ["VSEPR theory","Hybridization","MOT basics","Hydrogen bonding"], "<b>JEE Adv:</b> shape/hybridization reasoning — high weight, conceptual. <b>BITSAT/WBJEE:</b> direct shape/hybridization identification. <b>Board:</b> Lewis structures, VSEPR."],
+["States of Matter","", ["Gas laws","Ideal gas equation","Real gases — van der Waals"], "<b>JEE:</b> numerical-heavy gas-law problems. <b>BITSAT/WBJEE:</b> direct numericals. <b>Board:</b> standard gas-law applications."],
+["Equilibrium (basic)","", ["Chemical equilibrium","Le Chatelier's principle","Kc/Kp"], "Foundational for Class 12 Ionic Equilibria. <b>JEE:</b> Kc/Kp numericals. <b>Board:</b> Le Chatelier's applications."],
+["Redox Reactions","", ["Oxidation number rules","Balancing redox equations"], "Direct application across all exams including Board — a recurring building block, not usually standalone."],
+["s-Block and p-Block (intro)","", ["Alkali &amp; alkaline earth metals","General periodic trends"], "Mostly factual across all exams. <b>Board:</b> preparation/properties of key compounds."],
+["Organic Chemistry Basics (GOC)","adv", ["Nomenclature","Isomerism","Inductive &amp; resonance effects","Reaction intermediates"], "<b>JEE Adv:</b> foundational — GOC reasoning underlies nearly every Class 12 organic chapter, very high leverage to master early. <b>BITSAT/WBJEE/Board:</b> nomenclature and basic isomerism."],
+["Hydrocarbons","", ["Alkanes/alkenes/alkynes — preparation &amp; reactions","Aromaticity"], "<b>JEE:</b> reaction-mechanism questions. <b>BITSAT/WBJEE/Board:</b> preparation methods and properties."]
+];
+
+const MATHS_C11 = [
+["Sets, Relations and Functions","", ["Set operations","Types of relations","Domain/range of functions"], "<b>JEE Main:</b> direct function-based questions. <b>BITSAT/WBJEE/Board:</b> standard definitions and computations."],
+["Complex Numbers","adv", ["Algebra of complex numbers","Modulus-argument form","Cube roots of unity"], "<b>JEE Adv:</b> combined with equations/geometry — moderate-high weight. <b>BITSAT/WBJEE:</b> direct numericals. <b>Board:</b> standard algebra."],
+["Sequences and Series","", ["Arithmetic &amp; geometric progressions","Special series sums"], "Direct application across all exams — a recurring building block for other chapters."],
+["Permutations and Combinations","adv", ["Fundamental counting principle","Permutations &amp; combinations","Circular permutations"], "<b>JEE Adv:</b> tricky counting/case-based problems — high weight. <b>BITSAT/WBJEE:</b> direct numericals. <b>Board:</b> standard formula application."],
+["Binomial Theorem","", ["Expansion &amp; general term","Middle term","Properties of coefficients"], "<b>JEE:</b> often combined with series. <b>BITSAT/WBJEE/Board:</b> direct expansion problems."],
+["Straight Lines","", ["Forms of line equations","Angle between lines","Distance formulas"], "Foundational for Class 12 Pair of Straight Lines — all exams build on this directly."],
+["Conic Sections","adv", ["Circle, parabola, ellipse, hyperbola — standard equations","Tangents &amp; normals","Parametric forms"], "<b>JEE Adv:</b> tangent/normal + parametric multi-step problems — high weight overall. <b>BITSAT/WBJEE:</b> direct standard-equation numericals. <b>Board:</b> standard equation derivations."],
+["Limits (intro)","", ["Concept of a limit","Basic limit evaluation"], "Foundational for Class 12 Differentiation — all exams build on this directly."]
+];
+
+const MILESTONES = [
+  {key:"jee1", name:"JEE Main — Session 1", def:"2028-01-24"},
+  {key:"board", name:"HSC Board theory begins", def:"2028-02-11"},
+  {key:"cet1", name:"MHT-CET — Session 1", def:"2028-04-15"},
+  {key:"jeeadv", name:"JEE Advanced", def:"2028-05-18"}
+];
+
+const ROADMAP_START = new Date("2026-07-10");
+const ROADMAP_END = new Date("2028-06-15");
+const ROADMAP_POINTS = [
+  {date:"2026-07-10", label:"Foundation begins", sub:"Class 11 starts"},
+  {date:"2026-10-15", label:"Term tests", sub:"Class 11"},
+  {date:"2027-03-01", label:"Class 11 finals", sub:""},
+  {date:"2027-06-15", label:"Consolidation begins", sub:"Class 12 starts"},
+  {date:"2027-11-01", label:"Prelims", sub:"Full revision starts"},
+  {date:"2028-01-24", label:"JEE Main S1", sub:"tentative"},
+  {date:"2028-02-11", label:"HSC Boards", sub:"tentative"},
+  {date:"2028-04-15", label:"CET + JEE S2", sub:"tentative"},
+  {date:"2028-05-18", label:"JEE Advanced", sub:"tentative"}
+];
+
+/* ================= State ================= */
+/* ================= Storage backend =================
+   Uses Claude's window.storage when available (inside claude.ai).
+   Falls back to localStorage automatically when self-hosted (e.g. GitHub Pages),
+   so this file works standalone too. */
+const storageBackend = (typeof window.storage !== "undefined") ? window.storage : {
+  async get(key){
+    const v = localStorage.getItem(key);
+    return v !== null ? {key, value:v} : null;
+  },
+  async set(key, value){
+    localStorage.setItem(key, value);
+    return {key, value};
+  }
+};
+
+let state = {
+  milestones:{},
+  checks:{physics:[], chemistry:[], maths:[], psychology:[], english:[], it:[], physicsC11:[], chemistryC11:[], mathsC11:[]},
+  planner:{mon:"",tue:"",wed:"",thu:"",fri:"",sat:"",sun:""},
+  lessonPlans:{}
+};
+function defaultChecks(arr){ return arr.map(()=>false); }
+
+async function loadState(){
+  try{
+    const res = await storageBackend.get("mission2028-state");
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      state = Object.assign(state, parsed);
+      state.checks = Object.assign({physics:[], chemistry:[], maths:[], psychology:[], english:[], it:[], physicsC11:[], chemistryC11:[], mathsC11:[]}, parsed.checks || {});
+      state.lessonPlans = parsed.lessonPlans || {};
+    }
+  }catch(e){}
+  if(!state.checks.physics || state.checks.physics.length !== PHYSICS.length) state.checks.physics = defaultChecks(PHYSICS);
+  if(!state.checks.chemistry || state.checks.chemistry.length !== CHEMISTRY.length) state.checks.chemistry = defaultChecks(CHEMISTRY);
+  if(!state.checks.maths || state.checks.maths.length !== MATHS.length) state.checks.maths = defaultChecks(MATHS);
+  if(!state.checks.psychology || state.checks.psychology.length !== PSYCHOLOGY.length) state.checks.psychology = defaultChecks(PSYCHOLOGY);
+  if(!state.checks.english || state.checks.english.length !== ENGLISH.length) state.checks.english = defaultChecks(ENGLISH);
+  if(!state.checks.it || state.checks.it.length !== IT.length) state.checks.it = defaultChecks(IT);
+  if(!state.checks.physicsC11 || state.checks.physicsC11.length !== PHYSICS_C11.length) state.checks.physicsC11 = defaultChecks(PHYSICS_C11);
+  if(!state.checks.chemistryC11 || state.checks.chemistryC11.length !== CHEMISTRY_C11.length) state.checks.chemistryC11 = defaultChecks(CHEMISTRY_C11);
+  if(!state.checks.mathsC11 || state.checks.mathsC11.length !== MATHS_C11.length) state.checks.mathsC11 = defaultChecks(MATHS_C11);
+  MILESTONES.forEach(m=>{ if(!state.milestones[m.key]) state.milestones[m.key] = m.def; });
+}
+
+let saveTimer = null;
+function saveState(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    try{ await storageBackend.set("mission2028-state", JSON.stringify(state)); toast(); }
+    catch(e){ console.error("save failed", e); }
+  }, 400);
+}
+function toast(){
+  const t = document.getElementById("save-toast");
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 1200);
+}
+
+/* ================= Nav ================= */
+document.getElementById("nav").addEventListener("click", (e)=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  document.getElementById("panel-"+btn.dataset.tab).classList.add("active");
+});
+
+function renderToday(){
+  document.getElementById("today-display").textContent = new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
+}
+
+function daysUntil(dateStr){
+  const target = new Date(dateStr+"T00:00:00");
+  const now = new Date(); now.setHours(0,0,0,0);
+  return Math.round((target-now)/86400000);
+}
+function renderCountdowns(){
+  const grid = document.getElementById("countdown-grid");
+  grid.innerHTML = "";
+  MILESTONES.forEach(m=>{
+    const dateVal = state.milestones[m.key];
+    const days = daysUntil(dateVal);
+    const div = document.createElement("div");
+    div.className = "card countdown-card";
+    div.innerHTML = `<div class="name">${m.name}</div><div class="days">${days>=0?days:0}<span>days ${days>=0?"to go":"— passed"}</span></div><div class="date-row"><span class="tentative-tag">Tentative</span><input type="date" value="${dateVal}" data-key="${m.key}"></div>`;
+    grid.appendChild(div);
+  });
+  grid.querySelectorAll("input[type=date]").forEach(inp=>{
+    inp.addEventListener("change", (e)=>{
+      state.milestones[e.target.dataset.key] = e.target.value;
+      saveState(); renderCountdowns();
+    });
+  });
+}
+
+function renderRoadmap(){
+  const fp = document.getElementById("flightpath");
+  fp.innerHTML = '<div class="track"></div><div class="fill" id="fp-fill"></div>';
+  const totalSpan = ROADMAP_END - ROADMAP_START;
+  const now = new Date();
+  const nowPct = Math.min(100, Math.max(0, ((now-ROADMAP_START)/totalSpan)*100));
+  document.getElementById("fp-fill").style.width = nowPct+"%";
+  ROADMAP_POINTS.forEach(p=>{
+    const pd = new Date(p.date);
+    const pct = ((pd-ROADMAP_START)/totalSpan)*100;
+    const node = document.createElement("div");
+    node.className = "node" + (pct < nowPct-1 ? " passed":"");
+    node.style.left = pct+"%";
+    fp.appendChild(node);
+    const lbl = document.createElement("div");
+    lbl.className = "lbl"; lbl.style.left = pct+"%";
+    lbl.innerHTML = "<b>"+p.label+"</b>"+(p.sub?p.sub:"");
+    fp.appendChild(lbl);
+  });
+  const hereNode = document.createElement("div");
+  hereNode.className = "node here"; hereNode.style.left = nowPct+"%"; hereNode.title = "Today";
+  fp.appendChild(hereNode);
+}
+
+/* ================= Chapter rendering with expandable detail ================= */
+function renderList(containerId, data, checksArr, onToggle){
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+  data.forEach((item, i)=>{
+    const [name, flag, subtopics, examNote] = item;
+    const wrap = document.createElement("div");
+    wrap.className = "chapter-item";
+
+    const row = document.createElement("div");
+    row.className = "chapter-row" + (checksArr[i] ? " checked":"");
+    let tagHtml = "";
+    if(flag === "adv") tagHtml = '<span class="tag adv">Adv</span>';
+    if(flag === "noJEE") tagHtml = '<span class="tag noJEE">Board/CET only</span>';
+    if(flag === "hw") tagHtml = '<span class="tag hw">High-weight</span>';
+    row.innerHTML = `<input type="checkbox" ${checksArr[i]?"checked":""}> <span class="cname">${name}</span> ${tagHtml} <span class="chevron">▸</span>`;
+    wrap.appendChild(row);
+
+    const detail = document.createElement("div");
+    detail.className = "chapter-detail";
+    let detailHtml = "";
+    if(subtopics && subtopics.length){
+      detailHtml += "<h4>Sub-topics to cover</h4><ul>" + subtopics.map(s=>"<li>"+s+"</li>").join("") + "</ul>";
+    }
+    if(examNote){
+      detailHtml += "<h4>Exam-by-exam notes</h4><div class='exam-note'>"+examNote+"</div>";
+    }
+    detail.innerHTML = detailHtml;
+    wrap.appendChild(detail);
+
+    row.querySelector("input").addEventListener("change",(e)=>{
+      e.stopPropagation();
+      checksArr[i] = e.target.checked;
+      row.classList.toggle("checked", e.target.checked);
+      onToggle();
+      saveState();
+    });
+    row.addEventListener("click",(e)=>{
+      if(e.target.tagName === "INPUT") return;
+      const isOpen = detail.classList.toggle("open");
+      row.querySelector(".chevron").classList.toggle("open", isOpen);
+    });
+
+    container.appendChild(wrap);
+  });
+}
+
+function updateBar(key, checksArr){
+  const done = checksArr.filter(Boolean).length;
+  const total = checksArr.length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  const bar = document.getElementById("bar-"+key);
+  if(bar) bar.style.width = pct+"%";
+  const pctLabel = document.getElementById("pct-"+key);
+  if(pctLabel) pctLabel.textContent = done+"/"+total;
+}
+
+function renderAllSubjects(){
+  renderList("list-physics", PHYSICS, state.checks.physics, ()=>{ updateCombinedBar("physics","physicsC11"); renderProgressTab(); });
+  renderList("list-physics-c11", PHYSICS_C11, state.checks.physicsC11, ()=>{ updateCombinedBar("physics","physicsC11"); renderProgressTab(); });
+  renderList("list-chemistry", CHEMISTRY, state.checks.chemistry, ()=>{ updateCombinedBar("chemistry","chemistryC11"); renderProgressTab(); });
+  renderList("list-chemistry-c11", CHEMISTRY_C11, state.checks.chemistryC11, ()=>{ updateCombinedBar("chemistry","chemistryC11"); renderProgressTab(); });
+  renderList("list-maths", MATHS, state.checks.maths, ()=>{ updateCombinedBar("maths","mathsC11"); renderProgressTab(); });
+  renderList("list-maths-c11", MATHS_C11, state.checks.mathsC11, ()=>{ updateCombinedBar("maths","mathsC11"); renderProgressTab(); });
+  renderList("list-psychology", PSYCHOLOGY, state.checks.psychology, ()=>{ updateBar("psychology", state.checks.psychology); renderProgressTab(); });
+  renderList("list-english", ENGLISH, state.checks.english, ()=>{ updateBar("english", state.checks.english); updateOtherBar(); });
+  renderList("list-it", IT, state.checks.it, ()=>{ updateBar("it", state.checks.it); updateOtherBar(); });
+  updateCombinedBar("physics","physicsC11");
+  updateCombinedBar("chemistry","chemistryC11");
+  updateCombinedBar("maths","mathsC11");
+  updateBar("psychology", state.checks.psychology);
+  updateOtherBar();
+  renderProgressTab();
+}
+function updateCombinedBar(key, c11key){
+  const combined = state.checks[key].concat(state.checks[c11key]);
+  const done = combined.filter(Boolean).length;
+  const total = combined.length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  const bar = document.getElementById("bar-"+key);
+  if(bar) bar.style.width = pct+"%";
+  const pctLabel = document.getElementById("pct-"+key);
+  if(pctLabel) pctLabel.textContent = done+"/"+total;
+}
+function updateOtherBar(){
+  const combined = state.checks.english.concat(state.checks.it);
+  const done = combined.filter(Boolean).length;
+  const total = combined.length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById("bar-other").style.width = pct+"%";
+  document.getElementById("pct-other").textContent = done+"/"+total;
+  renderProgressTab();
+}
+
+/* ================= Planner ================= */
+const DAYS = [["mon","Monday"],["tue","Tuesday"],["wed","Wednesday"],["thu","Thursday"],["fri","Friday"],["sat","Saturday"],["sun","Sunday"]];
+const PLACEHOLDERS = {
+  mon:"Physics chapter + Board exercises",
+  tue:"Chemistry chapter + CET MCQs",
+  wed:"Maths chapter + JEE problems",
+  thu:"Physics revision + error log + Psychology chapter",
+  fri:"Chemistry revision + error log + Psychology case studies",
+  sat:"Full-length mock (rotate Board/CET/JEE/BITSAT/WBJEE) + English writing skills",
+  sun:"Mock review + error log + IT practicals + light Psychology revision"
+};
+function renderPlanner(){
+  const grid = document.getElementById("week-grid");
+  grid.innerHTML = "";
+  DAYS.forEach(([key,label])=>{
+    const div = document.createElement("div");
+    div.className = "day-card";
+    div.innerHTML = `<div class="dname">${label}</div><textarea placeholder="${PLACEHOLDERS[key]}" data-day="${key}">${state.planner[key]||""}</textarea>`;
+    grid.appendChild(div);
+  });
+  grid.querySelectorAll("textarea").forEach(ta=>{
+    ta.addEventListener("input",(e)=>{ state.planner[e.target.dataset.day] = e.target.value; saveState(); });
+  });
+}
+
+/* ================= Progress ================= */
+function renderProgressTab(){
+  const rows = document.getElementById("progress-rows");
+  if(!rows) return;
+  const subs = [
+    ["Physics", state.checks.physics.concat(state.checks.physicsC11)],
+    ["Chemistry", state.checks.chemistry.concat(state.checks.chemistryC11)],
+    ["Maths", state.checks.maths.concat(state.checks.mathsC11)],
+    ["Psychology", state.checks.psychology], ["English", state.checks.english], ["IT", state.checks.it]
+  ];
+  rows.innerHTML = "";
+  let totalDone=0, totalAll=0;
+  subs.forEach(([label, arr])=>{
+    const done = arr.filter(Boolean).length;
+    const total = arr.length;
+    totalDone += done; totalAll += total;
+    const pct = total ? Math.round((done/total)*100) : 0;
+    const item = document.createElement("div");
+    item.className = "sp-item";
+    item.innerHTML = `<div class="lbl">${label}</div><div class="bigbar-outer"><div class="bigbar-inner" style="width:${pct}%"></div></div><div class="pct">${pct}%</div>`;
+    rows.appendChild(item);
+  });
+  const overallPct = totalAll ? Math.round((totalDone/totalAll)*100) : 0;
+  const overall = document.createElement("div");
+  overall.className = "sp-item";
+  overall.style.marginTop = "6px"; overall.style.borderTop = "1px solid var(--border-soft)"; overall.style.paddingTop = "14px";
+  overall.innerHTML = `<div class="lbl" style="color:var(--text);font-weight:600;">Overall</div><div class="bigbar-outer"><div class="bigbar-inner" style="width:${overallPct}%"></div></div><div class="pct" style="color:var(--gold);">${overallPct}%</div>`;
+  rows.appendChild(overall);
+}
+
+document.getElementById("reset-btn").addEventListener("click", async ()=>{
+  if(!confirm("Reset every chapter checklist to unchecked? This cannot be undone.")) return;
+  state.checks.physics = defaultChecks(PHYSICS);
+  state.checks.chemistry = defaultChecks(CHEMISTRY);
+  state.checks.maths = defaultChecks(MATHS);
+  state.checks.psychology = defaultChecks(PSYCHOLOGY);
+  state.checks.english = defaultChecks(ENGLISH);
+  state.checks.it = defaultChecks(IT);
+  state.checks.physicsC11 = defaultChecks(PHYSICS_C11);
+  state.checks.chemistryC11 = defaultChecks(CHEMISTRY_C11);
+  state.checks.mathsC11 = defaultChecks(MATHS_C11);
+  saveState();
+  renderAllSubjects();
+});
+
+/* ================= Lesson plan builder ================= */
+const SUBJECT_INDEX = {
+  "Physics": PHYSICS.concat(PHYSICS_C11),
+  "Chemistry": CHEMISTRY.concat(CHEMISTRY_C11),
+  "Maths": MATHS.concat(MATHS_C11),
+  "Psychology": PSYCHOLOGY,
+  "English": ENGLISH,
+  "IT": IT
+};
+const ENTRANCE_SUBJECTS = ["Physics","Chemistry","Maths"];
+
+function lpKey(subject, chapter){ return subject+" :: "+chapter; }
+
+function populateLPDropdowns(){
+  const subjSel = document.getElementById("lp-subject");
+  subjSel.innerHTML = Object.keys(SUBJECT_INDEX).map(s=>`<option value="${s}">${s}</option>`).join("");
+  populateLPChapters();
+  subjSel.addEventListener("change", populateLPChapters);
+}
+function populateLPChapters(){
+  const subject = document.getElementById("lp-subject").value;
+  const chapSel = document.getElementById("lp-chapter");
+  const chapters = SUBJECT_INDEX[subject] || [];
+  chapSel.innerHTML = chapters.map(c=>`<option value="${c[0]}">${c[0]}</option>`).join("");
+  loadLPOutput();
+  chapSel.addEventListener("change", loadLPOutput);
+}
+function loadLPOutput(){
+  const subject = document.getElementById("lp-subject").value;
+  const chapter = document.getElementById("lp-chapter").value;
+  const key = lpKey(subject, chapter);
+  document.getElementById("lp-output").value = state.lessonPlans[key] || "";
+}
+function generateLessonPlan(){
+  const subject = document.getElementById("lp-subject").value;
+  const chapter = document.getElementById("lp-chapter").value;
+  const chapters = SUBJECT_INDEX[subject] || [];
+  const found = chapters.find(c=>c[0]===chapter);
+  if(!found) return;
+  const [name, flag, subtopics, examNote] = found;
+  const isEntrance = ENTRANCE_SUBJECTS.includes(subject);
+  const plainNote = (examNote||"").replace(/<[^>]+>/g,"");
+  let plan = `LESSON PLAN — ${name} (${subject})\n${"=".repeat(40)}\n\n`;
+  plan += `1. CONCEPT PASS (untimed)\n   Read the chapter once in the prescribed textbook. Don't solve yet.\n\n`;
+  plan += `2. ACTIVE RECALL\n   From memory, write out these sub-topics and the logic behind each:\n`;
+  (subtopics||[]).forEach(s=>{ plan += `   - ${s.replace(/&amp;/g,"&")}\n`; });
+  plan += `\n3. TEXTBOOK EXERCISES\n   Solve every exercise problem in the prescribed textbook${isEntrance?" and NCERT":""} before any outside source.\n\n`;
+  if(isEntrance){
+    plan += `4. EXAM-SPECIFIC DEPTH\n   ${plainNote}\n\n`;
+    plan += `5. TIMED PRACTICE\n   CET-style MCQs untimed, then timed.${flag==="adv"?" Add a JEE-level mixed set once CET-level accuracy is consistently high — this chapter has extra JEE Advanced depth.":" Add a JEE-level mixed set once CET-level accuracy is consistently high."}\n\n`;
+    plan += `6. ERROR LOG\n   Log every mistake with the correct method, not just the right answer.\n\n`;
+    plan += `7. SPACED REVISION\n   Revisit briefly after 3 days, then again after 2 weeks.\n`;
+  } else {
+    plan += `4. BOARD-FOCUSED NOTES\n   ${plainNote}\n\n`;
+    plan += `5. PAST PAPER PRACTICE\n   Solve 3-4 years of Board past-paper questions on this chapter/section.\n\n`;
+    plan += `6. SPACED REVISION\n   Revisit briefly after 3 days, then again after 2 weeks.\n`;
+  }
+  document.getElementById("lp-output").value = plan;
+  const key = lpKey(subject, chapter);
+  state.lessonPlans[key] = plan;
+  saveState();
+}
+function wireLessonPlanBuilder(){
+  populateLPDropdowns();
+  document.getElementById("lp-generate").addEventListener("click", generateLessonPlan);
+  document.getElementById("lp-output").addEventListener("input",(e)=>{
+    const subject = document.getElementById("lp-subject").value;
+    const chapter = document.getElementById("lp-chapter").value;
+    state.lessonPlans[lpKey(subject, chapter)] = e.target.value;
+    saveState();
+  });
+}
+
+(async function init(){
+  await loadState();
+  renderToday();
+  renderCountdowns();
+  renderRoadmap();
+  renderAllSubjects();
+  renderPlanner();
+  wireLessonPlanBuilder();
+})();
+</script>
+</body>
+</html>
